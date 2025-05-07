@@ -2,7 +2,7 @@
 #define CARTA_HPP
 #include <string>
 #include <iostream>
-
+using namespace std;
 enum TipoCarta
 {
     DIAMANTE,
@@ -21,12 +21,12 @@ public:
     TipoCarta tipo;
     int valor;
 
-    std::string nome() const; 
+    string nome() const;
     Carta(TipoCarta t);
 
     std::string toString() const
     {
-        std::string tipo_str;
+        string tipo_str;
         switch (tipo)
         {
         case DIAMANTE:
@@ -36,7 +36,7 @@ public:
             tipo_str = "Ouro";
             break;
         case COURO:
-            tipo_str = "Couro"; 
+            tipo_str = "Couro";
             break;
         case PRATA:
             tipo_str = "Prata";
@@ -58,4 +58,15 @@ public:
         return tipo_str; // + " (Valor: " + std::to_string(valor) + ")";
     }
 };
+inline void mostrar_tipos_de_carta()
+{
+    cout << "Tipos de mercadoria:\n";
+    cout << "0 - Diamante\n";
+    cout << "1 - Ouro\n";
+    cout << "2 - Prata\n";
+    cout << "3 - Tecido\n";
+    cout << "4 - Especiaria\n";
+    cout << "5 - Couro\n";
+    cout << "6 - Camelo (nao pode ser vendido)\n";
+}
 #endif

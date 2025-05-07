@@ -17,6 +17,10 @@ void Jogador::pegar_carta(const Carta &carta)
     {
         mao.push_back(carta);
     }
+    else
+    {
+        camelos.push_back(carta);
+    }
 }
 void Jogador::zerar_pontos()
 {

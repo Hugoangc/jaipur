@@ -4,6 +4,7 @@
 #include "Mercado.hpp"
 #include <iostream>
 #include <limits>
+#include <fstream>
 using namespace std;
 void Jogo::iniciar()
 {
@@ -58,6 +59,9 @@ void Jogo::iniciar()
             cout << "3. Trocar cartas com o mercado\n";
             cout << "4. Vender mercadorias\n";
             cout << "5. Encerrar partida atual\n";
+            cout << "6. Salvar Jogo\n";
+            cout << "7. Carregar Jogo\n";
+
             int opcao;
             cin >> opcao;
 
@@ -170,6 +174,7 @@ void Jogo::iniciar()
             {
                 atual.mostrar_mao();
                 cout << "Digite o tipo de carta a vender (0 a 6): ";
+                mostrar_tipos_de_carta();
                 int tipo;
                 cin >> tipo;
                 cout << "Quantas cartas deseja vender?: ";
@@ -179,8 +184,19 @@ void Jogo::iniciar()
             }
             else if (opcao == 5)
             {
+                rodada_ativa = false;
+            }
+            else if (opcao == 6)
+            {
+                salvar_jogo("save.txt", jogador1, jogador2, baralho, mercado, turno);
+                cout << "Partida salva. Voce pode fechar o jogo com seguranca.\n";
                 return;
             }
+            else if (opcao == 7)
+            {
+                carregar_jogo("save.txt", jogador1, jogador2, baralho, mercado, turno);
+                cout << "Partida carregada.\n";
+                        }
             else
             {
                 cout << "Opcao invalida!\n";
@@ -205,7 +221,7 @@ void Jogo::iniciar()
         }
 
         // Mostrar resultado da rodada
-        cout << "\nPontuação da rodada:\n";
+        cout << "\nPontuacao da rodada:\n";
         cout << jogador1.nome << ": " << jogador1.pontos << " pontos\n";
         cout << jogador2.nome << ": " << jogador2.pontos << " pontos\n";
 
@@ -236,10 +252,128 @@ void Jogo::iniciar()
     cout << "\n=== FIM DE JOGO ===\n";
     if (selosJogador1 > selosJogador2)
     {
-        cout << jogador1.nome << " venceu o jogo com 2 Selos de Excelência!\n";
+        cout << jogador1.nome << " venceu o jogo com 2 Selos de Excelencia!\n";
     }
     else
     {
-        cout << jogador2.nome << " venceu o jogo com 2 Selos de Excelência!\n";
+        cout << jogador2.nome << " venceu o jogo com 2 Selos de Excelencia!\n";
     }
+}
+
+void Jogo::salvar_jogo(const string &nome_arquivo, const Jogador &jogador1, const Jogador &jogador2, const Baralho &baralho, const Mercado &mercado, int turno)
+{
+    ofstream out(nome_arquivo);
+    if (!out)
+    {
+        cout << "Erro ao salvar o jogo." << endl;
+        return;
+    }
+
+    out << jogador1.nome << '\n';
+    out << jogador1.pontos << '\n';
+    out << jogador1.mao.size() << '\n';
+    for (const auto &carta : jogador1.mao)
+        out << carta.tipo << ' ';
+    out << '\n';
+    out << jogador1.camelo_count() << '\n';
+
+    out << jogador2.nome << '\n';
+    out << jogador2.pontos << '\n';
+    out << jogador2.mao.size() << '\n';
+    for (const auto &carta : jogador2.mao)
+        out << carta.tipo << ' ';
+    out << '\n';
+    out << jogador2.camelo_count() << '\n';
+
+    out << baralho.tamanho() << '\n';
+    for (const auto &carta : baralho.cartas_restantes())
+        out << carta.tipo << ' ';
+    out << '\n';
+
+    out << mercado.getCartas().size() << '\n';
+    for (const auto &carta : mercado.getCartas())
+        out << carta.tipo << ' ';
+    out << '\n';
+
+    out << turno << '\n';
+
+    out.close();
+    cout << "Jogo salvo com sucesso em '" << nome_arquivo << "'!\n";
+}
+
+void Jogo::carregar_jogo(const std::string &nome_arquivo, Jogador &jogador1, Jogador &jogador2, Baralho &baralho, Mercado &mercado, int &turno)
+{
+    std::ifstream in(nome_arquivo);
+    if (!in)
+    {
+        std::cout << "Erro ao carregar o jogo." << std::endl;
+        return;
+    }
+
+    std::string nome;
+    int pontos, tamanho_mao, qtd_camelos, tamanho_baralho, tamanho_mercado, tipo;
+
+    // Jogador 1
+    std::getline(in, jogador1.nome);
+    in >> jogador1.pontos;
+
+    in >> tamanho_mao;
+    jogador1.mao.clear();
+    for (int i = 0; i < tamanho_mao; ++i)
+    {
+        in >> tipo;
+        jogador1.mao.push_back(Carta(static_cast<TipoCarta>(tipo)));
+    }
+
+    in >> qtd_camelos;
+    jogador1.camelos.clear();
+    for (int i = 0; i < qtd_camelos; ++i)
+    {
+        jogador1.camelos.push_back(Carta(CAMELO));
+    }
+
+    in.ignore(); // pular quebra de linha
+
+    // Jogador 2
+    std::getline(in, jogador2.nome);
+    in >> jogador2.pontos;
+
+    in >> tamanho_mao;
+    jogador2.mao.clear();
+    for (int i = 0; i < tamanho_mao; ++i)
+    {
+        in >> tipo;
+        jogador2.mao.push_back(Carta(static_cast<TipoCarta>(tipo)));
+    }
+
+    in >> qtd_camelos;
+    jogador2.camelos.clear();
+    for (int i = 0; i < qtd_camelos; ++i)
+    {
+        jogador2.camelos.push_back(Carta(CAMELO));
+    }
+
+    // Baralho
+    in >> tamanho_baralho;
+    baralho.cartas.clear();
+    for (int i = 0; i < tamanho_baralho; ++i)
+    {
+        in >> tipo;
+        baralho.cartas.push_back(Carta(static_cast<TipoCarta>(tipo)));
+    }
+
+    // Mercado
+    in >> tamanho_mercado;
+    mercado.getCartas().clear();
+    for (int i = 0; i < tamanho_mercado; ++i)
+    {
+        in >> tipo;
+        mercado.getCartas().push_back(Carta(static_cast<TipoCarta>(tipo)));
+    }
+
+    // Turno
+    in >> turno;
+
+    in.close();
+    std::cout << "Jogo carregado com sucesso de '" << nome_arquivo << "'!\n";
 }
