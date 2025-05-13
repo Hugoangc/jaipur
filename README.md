@@ -25,4 +25,8 @@ Para compilar, utilize o `g++`:
 ```bash
 g++ main.cpp Jogo.cpp Baralho.cpp Carta.cpp Mercado.cpp Ficha.cpp 
 Jogador.cpp -o jaipur 
-
+```
+E para executar:
+```
+.\jaipur
+```
