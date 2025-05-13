@@ -5,18 +5,19 @@
 #include "Mercado.hpp"
 #include <vector>
 #include <string>
+using namespace std;
 
 class Jogador
 {
 public:
-    std::string nome;
+    string nome;
     int pontos;
     int fichas_bonus;
     int selos_excelencia;
-    std::vector<Carta> mao;
-    std::vector<Carta> camelos;
+    vector<Carta> mao;
+    vector<Carta> camelos;
 
-    Jogador(std::string nome);
+    Jogador(string nome);
 
     void pegar_carta(const Carta &carta);
     void pegar_camelos_do_mercado(Mercado &mercado);
@@ -24,7 +25,7 @@ public:
     void mostrar_camelos() const;
     bool excedeu_limite_mao() const;
     void vender_mercadorias(Mercado &mercado, TipoCarta tipo, int quantidade);
-    void trocar_cartas(Mercado &mercado, const std::vector<int> &idx_mercado, const std::vector<int> &idx_mao);
+    void trocar_cartas(Mercado &mercado, const vector<int> &idx_mercado, const vector<int> &idx_mao);
     void zerar_pontos();
     Carta remover_carta_da_mao(int indice);
     Carta remover_um_camelo();

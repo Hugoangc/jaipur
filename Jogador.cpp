@@ -1,15 +1,16 @@
 #include "Jogador.hpp"
 #include <iostream>
 #include <algorithm>
+using namespace std;
 
-Jogador::Jogador(std::string nome)
-    : nome(std::move(nome)), pontos(0), fichas_bonus(0), selos_excelencia(0) {}
+Jogador::Jogador(string nome)
+    : nome(move(nome)), pontos(0), fichas_bonus(0), selos_excelencia(0) {}
 
 void Jogador::pegar_carta(const Carta &carta)
 {
     if (mao.size() >= 7)
     {
-        std::cout << "Voce ja possui 7 cartas na mao! Nao pode pegar mais.\n";
+        cout << "Voce ja possui 7 cartas na mao! Nao pode pegar mais.\n";
         return;
     }
 
@@ -46,16 +47,16 @@ void Jogador::pegar_camelos_do_mercado(Mercado &mercado)
 
 void Jogador::mostrar_mao() const
 {
-    std::cout << "Mao de " << nome << ":\n";
+    cout << "Mao de " << nome << ":\n";
     for (size_t i = 0; i < mao.size(); ++i)
     {
-        std::cout << "[" << i << "] " << mao[i].nome() << "\n";
+        cout << "[" << i << "] " << mao[i].nome() << "\n";
     }
 }
 
 void Jogador::mostrar_camelos() const
 {
-    std::cout << "Voce tem " << camelos.size() << " camelos.\n";
+    cout << "Voce tem " << camelos.size() << " camelos.\n";
 }
 
 bool Jogador::excedeu_limite_mao() const
@@ -73,13 +74,13 @@ void Jogador::vender_mercadorias(Mercado &mercado, TipoCarta tipo, int quantidad
 
     if (disponiveis < quantidade)
     {
-        std::cout << "Voce nao possui cartas suficientes para vender.\n";
+        cout << "Voce nao possui cartas suficientes para vender.\n";
         return;
     }
 
     if ((tipo == OURO || tipo == PRATA || tipo == DIAMANTE) && quantidade < 2)
     {
-        std::cout << "Voce deve vender pelo menos 2 cartas desse tipo.\n";
+        cout << "Voce deve vender pelo menos 2 cartas desse tipo.\n";
         return;
     }
 
@@ -126,12 +127,12 @@ void Jogador::vender_mercadorias(Mercado &mercado, TipoCarta tipo, int quantidad
     pontos += pontos_ganhos + bonus;
     fichas_bonus += bonus;
 
-    std::cout << "Voce vendeu " << quantidade << " cartas de " << Carta(tipo).nome()
+    cout << "Voce vendeu " << quantidade << " cartas de " << Carta(tipo).nome()
               << " e ganhou " << pontos_ganhos << " pontos em fichas.\n";
 
     if (bonus > 0)
     {
-        std::cout << "Bonus de " << bonus << " pontos por vender " << quantidade << " cartas!\n";
+        cout << "Bonus de " << bonus << " pontos por vender " << quantidade << " cartas!\n";
     }
 }
 
@@ -139,34 +140,34 @@ bool Jogador::camelo_vazio() const
 {
     return camelos.empty();
 }
-void Jogador::trocar_cartas(Mercado &mercado, const std::vector<int> &idx_mercado, const std::vector<int> &idx_mao)
+void Jogador::trocar_cartas(Mercado &mercado, const vector<int> &idx_mercado, const vector<int> &idx_mao)
 {
     if (idx_mercado.size() != idx_mao.size() || idx_mao.empty())
     {
-        std::cout << "Numero invalido de cartas para troca.\n";
+        cout << "Numero invalido de cartas para troca.\n";
         return;
     }
 
     if ((mao.size() - idx_mao.size() + idx_mercado.size()) > 7)
     {
-        std::cout << "Essa troca excederia o limite de 7 cartas na mao.\n";
+        cout << "Essa troca excederia o limite de 7 cartas na mao.\n";
         return;
     }
 
-    std::vector<Carta> cartas_para_trocar;
+    vector<Carta> cartas_para_trocar;
     for (int idx : idx_mao)
     {
         if (idx < 0 || idx >= (int)mao.size())
         {
-            std::cout << "Indice invalido da mao.\n";
+            cout << "Indice invalido da mao.\n";
             return;
         }
         cartas_para_trocar.push_back(mao[idx]);
     }
 
     // Ordenar índices da mão
-    std::vector<int> idx_mao_ordenado = idx_mao;
-    std::sort(idx_mao_ordenado.begin(), idx_mao_ordenado.end(), std::greater<int>());
+    vector<int> idx_mao_ordenado = idx_mao;
+    sort(idx_mao_ordenado.begin(), idx_mao_ordenado.end(), greater<int>());
 
     for (int idx : idx_mao_ordenado)
     {
@@ -178,7 +179,7 @@ void Jogador::trocar_cartas(Mercado &mercado, const std::vector<int> &idx_mercad
     {
         if (idx_mercado[i] < 0 || idx_mercado[i] >= (int)mercado.cartas.size())
         {
-            std::cout << "Indice invalido do mercado.\n";
+            cout << "Indice invalido do mercado.\n";
             return;
         }
 
@@ -186,7 +187,7 @@ void Jogador::trocar_cartas(Mercado &mercado, const std::vector<int> &idx_mercad
         mercado.cartas[idx_mercado[i]] = cartas_para_trocar[i];
     }
 
-    std::cout << "Troca realizada com sucesso.\n";
+    cout << "Troca realizada com sucesso.\n";
 }
 
 Carta Jogador::remover_carta_da_mao(int indice)
@@ -213,7 +214,7 @@ Carta Jogador::remover_um_camelo()
     }
     else
     {
-        std::cout << "Sem camelos para remover.\n";
+        cout << "Sem camelos para remover.\n";
         return Carta(CAMELO);
     }
 }

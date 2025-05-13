@@ -111,7 +111,7 @@ void Jogo::iniciar()
             else if (opcao == 3)
             {
                 int qtd;
-                cout << "Quantas cartas deseja pegar do mercado? (mínimo 2): ";
+                cout << "Quantas cartas deseja pegar do mercado? (minimo 2): ";
                 cin >> qtd;
 
                 if (qtd < 2)
@@ -160,15 +160,8 @@ void Jogo::iniciar()
                     }
                 }
 
-                // if (cartasTroca.size() == qtd)
-                // {
                 atual.trocar_cartas(mercado, indicesMercado, indicesMao);
                 mercado.repor(baralho);
-                // }
-                // else
-                // {
-                //     cout << "A troca falhou.\n";
-                // }
             }
             else if (opcao == 4)
             {
@@ -196,7 +189,7 @@ void Jogo::iniciar()
             {
                 carregar_jogo("save.txt", jogador1, jogador2, baralho, mercado, turno);
                 cout << "Partida carregada.\n";
-                        }
+            }
             else
             {
                 cout << "Opcao invalida!\n";
@@ -210,7 +203,7 @@ void Jogo::iniciar()
             }
         }
 
-        // CAMEL BONUS
+        // CAMELO BONUS
         if (jogador1.camelo_count() > jogador2.camelo_count())
         {
             jogador1.pontos += 5;
@@ -229,11 +222,13 @@ void Jogo::iniciar()
         {
             cout << jogador1.nome << " venceu a rodada!\n";
             selosJogador1++;
+            jogador1.selos_excelencia++;
         }
         else if (jogador2.pontos > jogador1.pontos)
         {
             cout << jogador2.nome << " venceu a rodada!\n";
             selosJogador2++;
+            jogador2.selos_excelencia++;
         }
         else
         {
@@ -243,14 +238,14 @@ void Jogo::iniciar()
         jogador1.zerar_pontos();
         jogador2.zerar_pontos();
 
-        if (selosJogador1 == 2 || selosJogador2 == 2)
+        if (jogador1.selos_excelencia == 2 || jogador2.selos_excelencia == 2)
         {
             jogoFinalizado = true;
         }
     }
 
     cout << "\n=== FIM DE JOGO ===\n";
-    if (selosJogador1 > selosJogador2)
+    if (jogador1.selos_excelencia > jogador2.selos_excelencia)
     {
         cout << jogador1.nome << " venceu o jogo com 2 Selos de Excelencia!\n";
     }
@@ -271,6 +266,7 @@ void Jogo::salvar_jogo(const string &nome_arquivo, const Jogador &jogador1, cons
 
     out << jogador1.nome << '\n';
     out << jogador1.pontos << '\n';
+    out << jogador1.selos_excelencia << '\n';
     out << jogador1.mao.size() << '\n';
     for (const auto &carta : jogador1.mao)
         out << carta.tipo << ' ';
@@ -279,6 +275,7 @@ void Jogo::salvar_jogo(const string &nome_arquivo, const Jogador &jogador1, cons
 
     out << jogador2.nome << '\n';
     out << jogador2.pontos << '\n';
+    out << jogador2.selos_excelencia << '\n';
     out << jogador2.mao.size() << '\n';
     for (const auto &carta : jogador2.mao)
         out << carta.tipo << ' ';
@@ -301,21 +298,22 @@ void Jogo::salvar_jogo(const string &nome_arquivo, const Jogador &jogador1, cons
     cout << "Jogo salvo com sucesso em '" << nome_arquivo << "'!\n";
 }
 
-void Jogo::carregar_jogo(const std::string &nome_arquivo, Jogador &jogador1, Jogador &jogador2, Baralho &baralho, Mercado &mercado, int &turno)
+void Jogo::carregar_jogo(const string &nome_arquivo, Jogador &jogador1, Jogador &jogador2, Baralho &baralho, Mercado &mercado, int &turno)
 {
-    std::ifstream in(nome_arquivo);
+    ifstream in(nome_arquivo);
     if (!in)
     {
-        std::cout << "Erro ao carregar o jogo." << std::endl;
+        cout << "Erro ao carregar o jogo." << endl;
         return;
     }
 
-    std::string nome;
+    string nome;
     int pontos, tamanho_mao, qtd_camelos, tamanho_baralho, tamanho_mercado, tipo;
 
     // Jogador 1
-    std::getline(in, jogador1.nome);
+    getline(in, jogador1.nome);
     in >> jogador1.pontos;
+    in >> jogador1.selos_excelencia;
 
     in >> tamanho_mao;
     jogador1.mao.clear();
@@ -332,11 +330,12 @@ void Jogo::carregar_jogo(const std::string &nome_arquivo, Jogador &jogador1, Jog
         jogador1.camelos.push_back(Carta(CAMELO));
     }
 
-    in.ignore(); // pular quebra de linha
+    in.ignore();
 
     // Jogador 2
-    std::getline(in, jogador2.nome);
+    getline(in, jogador2.nome);
     in >> jogador2.pontos;
+    in >> jogador2.selos_excelencia;
 
     in >> tamanho_mao;
     jogador2.mao.clear();
@@ -363,17 +362,25 @@ void Jogo::carregar_jogo(const std::string &nome_arquivo, Jogador &jogador1, Jog
     }
 
     // Mercado
+    // in >> tamanho_mercado;
+    // mercado.getCartas().clear();
+    // for (int i = 0; i < tamanho_mercado; ++i)
+    // {
+    //     in >> tipo;
+    //     mercado.getCartas().push_back(Carta(static_cast<TipoCarta>(tipo)));
+    // }
     in >> tamanho_mercado;
-    mercado.getCartas().clear();
+    auto cartas_mercado = mercado.getCartas();
+    cartas_mercado.clear();
     for (int i = 0; i < tamanho_mercado; ++i)
     {
         in >> tipo;
-        mercado.getCartas().push_back(Carta(static_cast<TipoCarta>(tipo)));
+        cartas_mercado.push_back(Carta(static_cast<TipoCarta>(tipo)));
     }
 
     // Turno
     in >> turno;
 
     in.close();
-    std::cout << "Jogo carregado com sucesso de '" << nome_arquivo << "'!\n";
+    cout << "Jogo carregado com sucesso de '" << nome_arquivo << "'!\n";
 }

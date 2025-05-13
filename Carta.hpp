@@ -24,7 +24,7 @@ public:
     string nome() const;
     Carta(TipoCarta t);
 
-    std::string toString() const
+    string toString() const
     {
         string tipo_str;
         switch (tipo)
@@ -55,7 +55,7 @@ public:
             break;
         }
 
-        return tipo_str; // + " (Valor: " + std::to_string(valor) + ")";
+        return tipo_str; // + " (Valor: " + to_string(valor) + ")";
     }
 };
 inline void mostrar_tipos_de_carta()

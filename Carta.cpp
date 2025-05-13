@@ -1,8 +1,9 @@
 #include "Carta.hpp"
+using namespace std;
 
 Carta::Carta(TipoCarta t) : tipo(t) {}
 
-std::string Carta::nome() const
+string Carta::nome() const
 {
     switch (tipo)
     {

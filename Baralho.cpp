@@ -5,7 +5,7 @@
 #include <algorithm>
 
 #include <ctime>
-
+using namespace std;
 Baralho::Baralho()
 {
     adicionar_cartas(DIAMANTE, 6);
@@ -27,9 +27,9 @@ void Baralho::adicionar_cartas(TipoCarta tipo, int quantidade)
 
 void Baralho::embaralhar()
 {
-    std::random_device rd;
-    std::mt19937 g(rd());
-    std::shuffle(cartas.begin(), cartas.end(), g);
+    random_device rd;
+    mt19937 g(rd());
+    shuffle(cartas.begin(), cartas.end(), g);
 }
 
 Carta Baralho::comprar()

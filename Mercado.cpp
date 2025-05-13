@@ -3,6 +3,8 @@
 #include <iostream>
 #include <algorithm>
 #include <random>
+using namespace std;
+
 void Mercado::inicializar(Baralho &baralho)
 {
     for (int i = 0; i < 5; ++i)
@@ -13,10 +15,10 @@ void Mercado::inicializar(Baralho &baralho)
 
 void Mercado::mostrar()
 {
-    std::cout << "Cartas do Mercado: \n";
+    cout << "Cartas do Mercado: \n";
     for (int i = 0; i < cartas.size(); ++i)
     {
-        std::cout << i << ": " << cartas[i].toString() << std::endl;
+        cout << i << ": " << cartas[i].toString() << endl;
     }
 }
 
@@ -63,7 +65,7 @@ void Mercado::remover_carta(int indice)
     }
 }
 
-void Mercado::trocar_cartas(const std::vector<int> &idx_mercado, const std::vector<Carta> &novas_cartas)
+void Mercado::trocar_cartas(const vector<int> &idx_mercado, const vector<Carta> &novas_cartas)
 {
     for (size_t i = 0; i < idx_mercado.size(); ++i)
     {
@@ -107,9 +109,9 @@ void Mercado::inicializar_fichas()
     bonus5 = {Ficha(8), Ficha(9), Ficha(10)};
 
     // Embaralhar as fichas bônus
-    std::random_device rd;
-    std::mt19937 g(rd());
-    std::shuffle(bonus3.begin(), bonus3.end(), g);
-    std::shuffle(bonus4.begin(), bonus4.end(), g);
-    std::shuffle(bonus5.begin(), bonus5.end(), g);
+    random_device rd;
+    mt19937 g(rd());
+    shuffle(bonus3.begin(), bonus3.end(), g);
+    shuffle(bonus4.begin(), bonus4.end(), g);
+    shuffle(bonus5.begin(), bonus5.end(), g);
 }
