@@ -57,6 +57,10 @@ public:
 
         return tipo_str; // + " (Valor: " + to_string(valor) + ")";
     }
+    bool operator==(const Carta &outra) const
+    {
+        return tipo == outra.tipo;
+    }
 };
 inline void mostrar_tipos_de_carta()
 {

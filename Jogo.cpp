@@ -2,10 +2,73 @@
 #include "Jogador.hpp"
 #include "Baralho.hpp"
 #include "Mercado.hpp"
+#include "Arvore.hpp"
 #include <iostream>
 #include <limits>
 #include <fstream>
+#include <memory>
+
 using namespace std;
+
+vector<EstadoJogo> gerar_jogadas_possiveis(const EstadoJogo &estado_atual)
+{
+    vector<EstadoJogo> jogadas_possiveis;
+    int turno_atual = estado_atual.turno;
+    const Jogador &jogador_da_vez = (turno_atual % 2 == 0) ? estado_atual.jogador1 : estado_atual.jogador2;
+
+    // 1. Gerar jogadas de "Comprar UMA carta"
+    for (int i = 0; i < estado_atual.mercado.getCartas().size(); ++i)
+    {
+        const Carta &carta_mercado = estado_atual.mercado.getCartas()[i];
+        if (carta_mercado.tipo != CAMELO && jogador_da_vez.mao.size() < 7)
+        {
+            EstadoJogo novo_estado = estado_atual;
+            Jogador &jogador_a_modificar = (turno_atual % 2 == 0) ? novo_estado.jogador1 : novo_estado.jogador2;
+
+            jogador_a_modificar.pegar_carta(carta_mercado);
+            novo_estado.mercado.remover_carta(i);
+            novo_estado.mercado.repor(novo_estado.baralho);
+            novo_estado.turno++;
+            jogadas_possiveis.push_back(novo_estado);
+        }
+    }
+
+    // 2. Gerar jogada de "Pegar TODOS os camelos"
+    if (estado_atual.mercado.tem_camelo())
+    {
+        EstadoJogo novo_estado = estado_atual;
+        Jogador &jogador_a_modificar = (turno_atual % 2 == 0) ? novo_estado.jogador1 : novo_estado.jogador2;
+
+        jogador_a_modificar.pegar_camelos_do_mercado(novo_estado.mercado);
+        novo_estado.mercado.repor(novo_estado.baralho);
+        novo_estado.turno++;
+        jogadas_possiveis.push_back(novo_estado);
+    }
+
+    // 3. Gerar jogadas de "Vender mercadorias"
+    map<TipoCarta, int> contagem_mao;
+    for (const auto &carta : jogador_da_vez.mao)
+    {
+        contagem_mao[carta.tipo]++;
+    }
+
+    for (auto const &[tipo, qtd_total] : contagem_mao)
+    {
+        int min_venda = (tipo == DIAMANTE || tipo == OURO || tipo == PRATA) ? 2 : 1;
+        for (int qtd_vender = min_venda; qtd_vender <= qtd_total; ++qtd_vender)
+        {
+            EstadoJogo novo_estado = estado_atual;
+            Jogador &jogador_a_modificar = (turno_atual % 2 == 0) ? novo_estado.jogador1 : novo_estado.jogador2;
+
+            jogador_a_modificar.vender_mercadorias(novo_estado.mercado, tipo, qtd_vender);
+            novo_estado.turno++;
+            jogadas_possiveis.push_back(novo_estado);
+        }
+    }
+
+    return jogadas_possiveis;
+}
+
 void Jogo::iniciar()
 {
     cout << "Bem-vindo ao Jaipur!" << endl;
@@ -15,243 +78,346 @@ void Jogo::iniciar()
     cout << "Digite o nome do Jogador 2: ";
     getline(cin, nome2);
 
-    Jogador jogador1(nome1);
-    Jogador jogador2(nome2);
+    Jogador base_j1(nome1);
+    Jogador base_j2(nome2);
 
-    int selosJogador1 = 0;
-    int selosJogador2 = 0;
     bool jogoFinalizado = false;
 
     while (!jogoFinalizado)
     {
-        Baralho baralho;
-        baralho.embaralhar();
+        Baralho baralho_inicial;
+        baralho_inicial.embaralhar();
 
-        Mercado mercado;
-        mercado.inicializar_fichas();
-        mercado.inicializar(baralho);
+        Mercado mercado_inicial;
+        mercado_inicial.inicializar_fichas();
+        mercado_inicial.inicializar(baralho_inicial);
 
-        jogador1.limpar_mao_e_camelos();
-        jogador2.limpar_mao_e_camelos();
+        base_j1.limpar_mao_e_camelos();
+        base_j2.limpar_mao_e_camelos();
+        base_j1.zerar_pontos();
+        base_j2.zerar_pontos();
 
         for (int i = 0; i < 5; ++i)
         {
-            jogador1.pegar_carta(baralho.comprar());
-            jogador2.pegar_carta(baralho.comprar());
+            base_j1.pegar_carta(baralho_inicial.comprar());
+            base_j2.pegar_carta(baralho_inicial.comprar());
         }
 
-        int turno = 0;
+        EstadoJogo estado_inicial(base_j1, base_j2, baralho_inicial, mercado_inicial, 0);
+        unique_ptr<ArvoreEstados> arvore = make_unique<ArvoreEstados>(estado_inicial);
+
         bool rodada_ativa = true;
 
         while (rodada_ativa)
         {
-            Jogador &atual = (turno % 2 == 0) ? jogador1 : jogador2;
+            const EstadoJogo &estado_atual = arvore->get_estado_atual();
+
+            Jogador j1 = estado_atual.jogador1;
+            Jogador j2 = estado_atual.jogador2;
+            Mercado m = estado_atual.mercado;
+            int turno_atual = estado_atual.turno;
+
+            Jogador &jogador_da_vez = (turno_atual % 2 == 0) ? j1 : j2;
 
             cout << "\n-------------------------------\n";
-            cout << "Turno de " << atual.nome << endl;
-            mercado.mostrar();
-            atual.mostrar_mao();
-            atual.mostrar_camelos();
+            cout << "Turno de " << jogador_da_vez.nome << " (Selos: " << jogador_da_vez.selos_excelencia << ")" << endl;
+            m.mostrar();
+            jogador_da_vez.mostrar_mao();
+            jogador_da_vez.mostrar_camelos();
 
             cout << "Escolha uma acao:\n";
             cout << "1. Comprar UMA carta do mercado\n";
             cout << "2. Pegar TODOS os camelos\n";
             cout << "3. Trocar cartas com o mercado\n";
             cout << "4. Vender mercadorias\n";
-            cout << "5. Encerrar partida atual\n";
-            cout << "6. Salvar Jogo\n";
-            cout << "7. Carregar Jogo\n";
+            cout << "5. Encerrar partida atual (termina a rodada)\n";
+            // cout << "6. Salvar Jogo\n"; // Salvar/Carregar desativado na versão com árvore
+            // cout << "7. Carregar Jogo\n";
+            cout << "8. Voltar jogada\n";
+            cout << "9. Explorar caminhos alternativos\n";
 
             int opcao;
             cin >> opcao;
 
+            if (cin.fail())
+            {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Entrada invalida! Por favor, digite um numero.\n";
+                continue;
+            }
+
+            if (opcao == 8)
+            {
+                arvore->voltar_jogada();
+                continue;
+            }
+
+            if (opcao == 5)
+            {
+                rodada_ativa = false;
+                continue;
+            }
+
+            EstadoJogo proximo_estado = estado_atual;
+            bool jogada_realizada = false;
+
+            // Obtém referências aos componentes DENTRO do 'proximo_estado' para modificá-los
+            Jogador &jogador_a_modificar = (proximo_estado.turno % 2 == 0) ? proximo_estado.jogador1 : proximo_estado.jogador2;
+            Baralho &baralho_a_modificar = proximo_estado.baralho;
+            Mercado &mercado_a_modificar = proximo_estado.mercado;
+
             if (opcao == 1)
             {
                 int idx;
-                cout << "Escolha a carta do mercado (0 a " << mercado.getCartas().size() - 1 << "): ";
+                cout << "Escolha a carta do mercado (0 a " << mercado_a_modificar.getCartas().size() - 1 << "): ";
                 cin >> idx;
-                if (cin.fail())
+                if (!cin.fail() && idx >= 0 && idx < mercado_a_modificar.getCartas().size())
                 {
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                    cout << "Entrada inválida!\n";
-                    continue;
-                }
-                if (idx >= 0 && idx < mercado.getCartas().size())
-                {
-                    Carta escolhida = mercado.getCartas()[idx];
+                    Carta escolhida = mercado_a_modificar.getCartas()[idx];
                     if (escolhida.tipo == CAMELO)
                     {
                         cout << "Use a opcao 2 para pegar camelos.\n";
                     }
-                    else if (atual.mao.size() >= 7)
+                    else if (jogador_a_modificar.mao.size() >= 7)
                     {
                         cout << "Voce ja possui 7 cartas na mao.\n";
                     }
                     else
                     {
-                        atual.pegar_carta(escolhida);
-                        mercado.remover_carta(idx);
-                        mercado.repor(baralho);
+                        jogador_a_modificar.pegar_carta(escolhida);
+                        mercado_a_modificar.remover_carta(idx);
+                        mercado_a_modificar.repor(baralho_a_modificar);
+                        jogada_realizada = true;
                     }
+                }
+                else
+                {
+                    cout << "Entrada ou indice invalido!\n";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 }
             }
             else if (opcao == 2)
             {
-                if (mercado.tem_camelo())
+                if (mercado_a_modificar.tem_camelo())
                 {
-                    atual.pegar_camelos_do_mercado(mercado);
-                    mercado.repor(baralho);
+                    jogador_a_modificar.pegar_camelos_do_mercado(mercado_a_modificar);
+                    mercado_a_modificar.repor(baralho_a_modificar);
+                    jogada_realizada = true;
                 }
                 else
                 {
                     cout << "Nao ha camelos no mercado.\n";
                 }
             }
+
             else if (opcao == 3)
             {
+
                 int qtd;
-                cout << "Quantas cartas deseja pegar do mercado? (minimo 2): ";
+                cout << "Quantas cartas deseja trocar? (minimo 2): ";
                 cin >> qtd;
 
-                if (qtd < 2)
+                if (cin.fail() || qtd < 2)
                 {
-                    cout << "Deve pegar pelo menos 2 cartas.\n";
+                    cout << "Quantidade inválida. A troca deve ser de pelo menos 2 cartas.\n";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
                     continue;
                 }
 
-                vector<int> indicesMercado(qtd);
-                for (int i = 0; i < qtd; ++i)
+                // Valida se a troca excede o limite da mão
+                if ((jogador_da_vez.mao.size() - qtd + qtd) > 7)
                 {
-                    cout << "Indice da carta no mercado (" << i + 1 << "): ";
-                    cin >> indicesMercado[i];
-                    if (mercado.getCartas()[indicesMercado[i]].tipo == CAMELO)
-                    {
-                        cout << "Nao e permitido trocar por camelos.\n";
-                        --i;
-                    }
+                    cout << "Essa troca excederia o limite de 7 cartas na mao.\n";
+                    continue;
                 }
 
-                vector<Carta> cartasTroca;
-                vector<int> indicesMao;
-
+                vector<int> indicesMercado;
+                cout << "Digite os " << qtd << " indices das cartas do mercado para PEGAR (ex: 1 3 4): ";
                 for (int i = 0; i < qtd; ++i)
                 {
-                    cout << "Trocar por carta da mao (m) ou camelo (c)? ";
+                    int idx;
+                    cin >> idx;
+                    if (cin.fail() || idx < 0 || idx >= m.getCartas().size() || m.getCartas()[idx].tipo == CAMELO)
+                    {
+                        cout << "Indice '" << idx << "' invalido ou é um camelo. Tente novamente.\n";
+                        cin.clear();
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        indicesMercado.clear();
+                        i = -1; // Reseta o loop
+                        continue;
+                    }
+                    indicesMercado.push_back(idx);
+                }
+
+                // --- Coleta de cartas do jogador para a troca ---
+                vector<int> indicesMao;
+                int camelosParaTrocar = 0;
+                cout << "Agora, escolha as " << qtd << " cartas para DAR em troca.\n";
+                for (int i = 0; i < qtd; ++i)
+                {
+                    cout << "Troca " << i + 1 << "/" << qtd << ": carta da mao (m) ou camelo (c)? ";
                     char tipo;
                     cin >> tipo;
+
                     if (tipo == 'm')
                     {
-                        atual.mostrar_mao();
-                        int idx;
-                        cout << "Indice da carta da mao: ";
-                        cin >> idx;
-                        indicesMao.push_back(idx);
+                        jogador_da_vez.mostrar_mao();
+                        cout << "Digite o indice da carta da mao: ";
+                        int idx_mao;
+                        cin >> idx_mao;
+                        if (cin.fail() || idx_mao < 0 || idx_mao >= jogador_da_vez.mao.size())
+                        {
+                            cout << "Indice da mao inválido. Tente novamente.\n";
+                            cin.clear();
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            i--;
+                            continue;
+                        }
+                        indicesMao.push_back(idx_mao);
                     }
                     else if (tipo == 'c')
                     {
-                        if (atual.camelo_vazio())
+                        if (camelosParaTrocar >= jogador_da_vez.camelo_count())
                         {
-                            cout << "Voce nao tem camelos suficientes.\n";
-                            --i;
+                            cout << "Você não tem camelos suficientes. Tente novamente.\n";
+                            i--;
                             continue;
                         }
-                        cartasTroca.push_back(atual.remover_um_camelo());
+                        camelosParaTrocar++;
+                    }
+                    else
+                    {
+                        cout << "Opção inválida. Tente 'm' ou 'c'.\n";
+                        i--;
+                        continue;
                     }
                 }
 
-                atual.trocar_cartas(mercado, indicesMercado, indicesMao);
-                mercado.repor(baralho);
+                // o número de cartas a dar deve ser igual ao número de cartas a pegar
+                if (indicesMao.size() + camelosParaTrocar != qtd)
+                {
+                    cout << "Erro: o número de cartas oferecidas não corresponde ao número de cartas a pegar. A troca foi cancelada.\n";
+                    continue;
+                }
+
+                jogador_a_modificar.realizar_troca_completa(mercado_a_modificar, indicesMercado, indicesMao, camelosParaTrocar);
+                jogada_realizada = true;
             }
-            else if (opcao == 4)
+            else if (opcao == 4) // Vender
             {
-                atual.mostrar_mao();
+                jogador_a_modificar.mostrar_mao();
                 cout << "Digite o tipo de carta a vender (0 a 6): ";
                 mostrar_tipos_de_carta();
-                int tipo;
-                cin >> tipo;
+                int tipo_int;
+                cin >> tipo_int;
                 cout << "Quantas cartas deseja vender?: ";
                 int qtd;
                 cin >> qtd;
-                atual.vender_mercadorias(mercado, static_cast<TipoCarta>(tipo), qtd);
+
+                if (!cin.fail() && tipo_int >= 0 && tipo_int <= 5 && qtd > 0)
+                {
+                    // Guardar pontos antes de vender para verificar se a venda foi bem-sucedida
+                    int pontos_antes = jogador_a_modificar.pontos;
+                    jogador_a_modificar.vender_mercadorias(mercado_a_modificar, static_cast<TipoCarta>(tipo_int), qtd);
+                    if (jogador_a_modificar.pontos > pontos_antes)
+                    {
+                        jogada_realizada = true;
+                    }
+                }
+                else
+                {
+                    cout << "Entrada inválida!\n";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                }
             }
-            else if (opcao == 5)
+            else if (opcao == 9)
             {
-                rodada_ativa = false;
-            }
-            else if (opcao == 6)
-            {
-                salvar_jogo("save.txt", jogador1, jogador2, baralho, mercado, turno);
-                cout << "Partida salva. Voce pode fechar o jogo com seguranca.\n";
-                return;
-            }
-            else if (opcao == 7)
-            {
-                carregar_jogo("save.txt", jogador1, jogador2, baralho, mercado, turno);
-                cout << "Partida carregada.\n";
+                cout << "Gerando jogadas alternativas a partir do estado atual... Isso pode levar um momento.\n";
+                vector<EstadoJogo> alternativas = gerar_jogadas_possiveis(estado_atual);
+                arvore->adicionar_filhos_hipoteticos(alternativas);
+                continue;
             }
             else
             {
                 cout << "Opcao invalida!\n";
             }
 
-            turno++;
+            if (jogada_realizada)
+            {
+                proximo_estado.turno++;
+                if (!arvore->adicionar_jogada(proximo_estado))
+                {
+                    cout << "Esta jogada levou a um estado já conhecido. Tente outra ação.\n";
+                }
+            }
 
-            if (mercado.tres_pilhas_vazias() || baralho.vazio())
+            const EstadoJogo &estado_para_verificacao = arvore->get_estado_atual();
+            if (estado_para_verificacao.mercado.tres_pilhas_vazias() || estado_para_verificacao.baralho.vazio())
             {
                 rodada_ativa = false;
             }
         }
 
-        // CAMELO BONUS
-        if (jogador1.camelo_count() > jogador2.camelo_count())
+        cout << "\n=== FIM DA RODADA ===\n";
+        const EstadoJogo &estado_final = arvore->get_estado_atual();
+        arvore->exportar_para_dot("arvore_rodada.dot");
+        Jogador j1_final = estado_final.jogador1;
+        Jogador j2_final = estado_final.jogador2;
+
+        if (j1_final.camelo_count() > j2_final.camelo_count())
         {
-            jogador1.pontos += 5;
+            cout << j1_final.nome << " ganha o bonus de 5 pontos por ter mais camelos!\n";
+            j1_final.pontos += 5;
         }
-        else if (jogador2.camelo_count() > jogador1.camelo_count())
+        else if (j2_final.camelo_count() > j1_final.camelo_count())
         {
-            jogador2.pontos += 5;
+            cout << j2_final.nome << " ganha o bonus de 5 pontos por ter mais camelos!\n";
+            j2_final.pontos += 5;
         }
 
-        // Mostrar resultado da rodada
         cout << "\nPontuacao da rodada:\n";
-        cout << jogador1.nome << ": " << jogador1.pontos << " pontos\n";
-        cout << jogador2.nome << ": " << jogador2.pontos << " pontos\n";
+        cout << j1_final.nome << ": " << j1_final.pontos << " pontos\n";
+        cout << j2_final.nome << ": " << j2_final.pontos << " pontos\n";
 
-        if (jogador1.pontos > jogador2.pontos)
+        if (j1_final.pontos > j2_final.pontos)
         {
-            cout << jogador1.nome << " venceu a rodada!\n";
-            selosJogador1++;
-            jogador1.selos_excelencia++;
+            cout << j1_final.nome << " venceu a rodada!\n";
+            base_j1.selos_excelencia++;
         }
-        else if (jogador2.pontos > jogador1.pontos)
+        else if (j2_final.pontos > j1_final.pontos)
         {
-            cout << jogador2.nome << " venceu a rodada!\n";
-            selosJogador2++;
-            jogador2.selos_excelencia++;
+            cout << j2_final.nome << " venceu a rodada!\n";
+            base_j2.selos_excelencia++;
         }
         else
         {
             cout << "Rodada empatada!\n";
         }
 
-        jogador1.zerar_pontos();
-        jogador2.zerar_pontos();
-
-        if (jogador1.selos_excelencia == 2 || jogador2.selos_excelencia == 2)
+        if (base_j1.selos_excelencia == 2 || base_j2.selos_excelencia == 2)
         {
             jogoFinalizado = true;
+        }
+        else
+        {
+            cout << "\nPressione Enter para iniciar a próxima rodada...";
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.get();
         }
     }
 
     cout << "\n=== FIM DE JOGO ===\n";
-    if (jogador1.selos_excelencia > jogador2.selos_excelencia)
+    if (base_j1.selos_excelencia > base_j2.selos_excelencia)
     {
-        cout << jogador1.nome << " venceu o jogo com 2 Selos de Excelencia!\n";
+        cout << base_j1.nome << " venceu o jogo com 2 Selos de Excelencia!\n";
     }
     else
     {
-        cout << jogador2.nome << " venceu o jogo com 2 Selos de Excelencia!\n";
+        cout << base_j2.nome << " venceu o jogo com 2 Selos de Excelencia!\n";
     }
 }
 

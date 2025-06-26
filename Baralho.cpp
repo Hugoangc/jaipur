@@ -27,8 +27,8 @@ void Baralho::adicionar_cartas(TipoCarta tipo, int quantidade)
 
 void Baralho::embaralhar()
 {
-    random_device rd;
-    mt19937 g(rd());
+    unsigned int seed = 12345;
+    mt19937 g(seed);
     shuffle(cartas.begin(), cartas.end(), g);
 }
 

@@ -128,7 +128,7 @@ void Jogador::vender_mercadorias(Mercado &mercado, TipoCarta tipo, int quantidad
     fichas_bonus += bonus;
 
     cout << "Voce vendeu " << quantidade << " cartas de " << Carta(tipo).nome()
-              << " e ganhou " << pontos_ganhos << " pontos em fichas.\n";
+         << " e ganhou " << pontos_ganhos << " pontos em fichas.\n";
 
     if (bonus > 0)
     {
@@ -227,4 +227,44 @@ void Jogador::limpar_mao_e_camelos()
 {
     mao.clear();
     camelos.clear();
+}
+
+void Jogador::realizar_troca_completa(Mercado &mercado, const vector<int> &idx_mercado, const vector<int> &idx_mao, int qtd_camelos)
+{
+    // 1. Coleta as cartas que o jogador vai receber do mercado
+    vector<Carta> cartas_recebidas;
+    for (int idx : idx_mercado)
+    {
+        cartas_recebidas.push_back(mercado.cartas[idx]);
+    }
+
+    // 2. Coleta as cartas que o jogador vai dar em troca
+    vector<Carta> cartas_para_dar;
+    vector<int> idx_mao_ordenado = idx_mao;
+    sort(idx_mao_ordenado.rbegin(), idx_mao_ordenado.rend());
+    for (int idx : idx_mao_ordenado)
+    {
+        cartas_para_dar.push_back(mao[idx]);
+        mao.erase(mao.begin() + idx);
+    }
+    // Pega camelos
+    for (int i = 0; i < qtd_camelos; ++i)
+    {
+        cartas_para_dar.push_back(camelos.back());
+        camelos.pop_back();
+    }
+
+    // 3. Adiciona as cartas recebidas à mão do jogador
+    for (const auto &carta : cartas_recebidas)
+    {
+        mao.push_back(carta);
+    }
+
+    // 4. Coloca as cartas dadas pelo jogador de volta no mercado
+    for (size_t i = 0; i < idx_mercado.size(); ++i)
+    {
+        mercado.cartas[idx_mercado[i]] = cartas_para_dar[i];
+    }
+
+    cout << "Troca realizada com sucesso!\n";
 }

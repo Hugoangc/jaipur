@@ -32,6 +32,7 @@ public:
     int camelo_count() const;
     bool camelo_vazio() const;
     void limpar_mao_e_camelos();
+    void realizar_troca_completa(Mercado &mercado, const vector<int> &idx_mercado, const vector<int> &idx_mao, int qtd_camelos);
 };
 
 #endif
