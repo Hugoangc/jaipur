@@ -30,3 +30,8 @@ E para executar:
 ```
 .\jaipur
 ```
+
+Já para o .dot
+```
+dot -Tpng arvore_rodada.dot -o arvore_rodada.png
+```
