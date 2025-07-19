@@ -19,7 +19,7 @@ public:
     vector<Ficha> bonus4;
     vector<Ficha> bonus5;
     void inicializar(Baralho &baralho);
-    void mostrar();
+    void mostrar() const;
     void repor(Baralho &baralho);
     void repor_camelo(Baralho &baralho);
     bool tem_camelo() const;

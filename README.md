@@ -23,14 +23,10 @@ Este é um projeto de implementação completa do jogo Jaipur em C++, jogável v
 Para compilar, utilize o `g++`:
 
 ```bash
-g++ main.cpp Arvore.cpp Baralho.cpp Carta.cpp Estado.cpp Ficha.cpp Jogador.cpp Jogo.cpp Mercado.cpp -o jaipur 
+g++ main.cpp Jogo.cpp Baralho.cpp Carta.cpp Mercado.cpp Ficha.cpp 
+Jogador.cpp -o jaipur 
 ```
 E para executar:
 ```
 .\jaipur
-```
-
-Já para o .dot
-```
-dot -Tpng arvore_rodada.dot -o arvore_rodada.png
 ```

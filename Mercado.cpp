@@ -13,7 +13,7 @@ void Mercado::inicializar(Baralho &baralho)
     }
 }
 
-void Mercado::mostrar()
+void Mercado::mostrar() const
 {
     cout << "Cartas do Mercado: \n";
     for (int i = 0; i < cartas.size(); ++i)

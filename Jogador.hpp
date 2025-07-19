@@ -24,7 +24,7 @@ public:
     void mostrar_mao() const;
     void mostrar_camelos() const;
     bool excedeu_limite_mao() const;
-    void vender_mercadorias(Mercado &mercado, TipoCarta tipo, int quantidade);
+    void vender_mercadorias(Mercado &mercado, TipoCarta tipo, int quantidade, bool imprimir_mensagens = true);
     void trocar_cartas(Mercado &mercado, const vector<int> &idx_mercado, const vector<int> &idx_mao);
     void zerar_pontos();
     Carta remover_carta_da_mao(int indice);
@@ -32,7 +32,7 @@ public:
     int camelo_count() const;
     bool camelo_vazio() const;
     void limpar_mao_e_camelos();
-    void realizar_troca_completa(Mercado &mercado, const vector<int> &idx_mercado, const vector<int> &idx_mao, int qtd_camelos);
+    void realizar_troca_completa(Mercado &mercado, const vector<int> &idx_mercado, const vector<int> &idx_mao, int qtd_camelos, bool imprimir_mensagens = true);
 };
 
 #endif

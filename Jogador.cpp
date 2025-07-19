@@ -63,7 +63,7 @@ bool Jogador::excedeu_limite_mao() const
 {
     return mao.size() > 7;
 }
-void Jogador::vender_mercadorias(Mercado &mercado, TipoCarta tipo, int quantidade)
+void Jogador::vender_mercadorias(Mercado &mercado, TipoCarta tipo, int quantidade, bool imprimir_mensagens)
 {
     int disponiveis = 0;
     for (const auto &carta : mao)
@@ -127,12 +127,15 @@ void Jogador::vender_mercadorias(Mercado &mercado, TipoCarta tipo, int quantidad
     pontos += pontos_ganhos + bonus;
     fichas_bonus += bonus;
 
-    cout << "Voce vendeu " << quantidade << " cartas de " << Carta(tipo).nome()
-         << " e ganhou " << pontos_ganhos << " pontos em fichas.\n";
-
-    if (bonus > 0)
+    if (imprimir_mensagens)
     {
-        cout << "Bonus de " << bonus << " pontos por vender " << quantidade << " cartas!\n";
+        cout << "Voce vendeu " << quantidade << " cartas de " << Carta(tipo).nome()
+             << " e ganhou " << pontos_ganhos << " pontos em fichas.\n";
+
+        if (bonus > 0)
+        {
+            cout << "Bonus de " << bonus << " pontos por vender " << quantidade << " cartas!\n";
+        }
     }
 }
 
@@ -229,7 +232,7 @@ void Jogador::limpar_mao_e_camelos()
     camelos.clear();
 }
 
-void Jogador::realizar_troca_completa(Mercado &mercado, const vector<int> &idx_mercado, const vector<int> &idx_mao, int qtd_camelos)
+void Jogador::realizar_troca_completa(Mercado &mercado, const vector<int> &idx_mercado, const vector<int> &idx_mao, int qtd_camelos, bool imprimir_mensagens)
 {
     // 1. Coleta as cartas que o jogador vai receber do mercado
     vector<Carta> cartas_recebidas;
@@ -265,6 +268,8 @@ void Jogador::realizar_troca_completa(Mercado &mercado, const vector<int> &idx_m
     {
         mercado.cartas[idx_mercado[i]] = cartas_para_dar[i];
     }
-
-    cout << "Troca realizada com sucesso!\n";
+    if (imprimir_mensagens)
+    {
+        cout << "Troca realizada com sucesso!\n";
+    }
 }
