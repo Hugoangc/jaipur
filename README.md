@@ -33,6 +33,8 @@ E para executar:
 .\jaipur
 ```
 
+---
+
 # Visualizando a Árvore de Decisões com Graphviz
 Após o término de cada rodada, o jogo automaticamente salvará um arquivo chamado arvore_rodada.dot. Para transformar este arquivo em uma imagem:
 Instale o Graphviz: Baixe e instale a partir do site oficial do Graphviz.
