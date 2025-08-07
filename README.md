@@ -20,6 +20,7 @@ Este projeto vai além de uma simples implementação das regras, incluindo:
 - Visualização da Árvore de Decisões: Ao final de cada rodada, o programa exporta a árvore de estados completa para um arquivo no formato .dot. Isso permite a criação de um grafo visual de todas as jogadas.
 
 Caminhos Reais vs. Hipotéticos: É possível acionar uma análise que calcula todos os movimentos possíveis a partir de um estado. Na visualização, o caminho real do jogo é mostrado com linhas sólidas, enquanto as alternativas não exploradas são mostradas com linhas pontilhadas.
+
 ---
 
 ##  Compilação
